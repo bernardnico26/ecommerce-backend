@@ -1,10 +1,19 @@
 const catchError = require('../utils/catchError');
 const Products = require('../models/Products');
 const Image = require('../models/Image');
+const {Op} = require('sequelize');
+const Category = require('../models/Category');
 
 
 const getAll = catchError(async(req, res) => {
-    const results = await Products.findAll({include:[Image]});
+    const { title, categoryId } = req.query;
+    const where = {};
+    if (title) where.title =  { [Op.iLike]: `%${title}%` }
+    if (categoryId) where.categoryId = categoryId
+    const results = await Products.findAll({
+        include: [Image, Category],
+        where,
+    });
     return res.json(results);
 });
 
@@ -15,7 +24,7 @@ const create = catchError(async(req, res) => {
 
 const getOne = catchError(async(req, res) => {
     const { id } = req.params;
-    const result = await Products.findByPk(id);
+    const result = await Products.findByPk(id,{include:[Image]});
     if(!result) return res.sendStatus(404);
     return res.json(result);
 });
